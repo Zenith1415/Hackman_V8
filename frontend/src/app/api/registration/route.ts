@@ -40,12 +40,28 @@ export async function POST(request: Request) {
       { status: 201 } // 201 means "Created"
     );
 
-  } catch (error: any) {
-    console.error('API Error:', error);
+  } catch (unknownError: unknown) {
+    console.error('API Error:', unknownError);
+
+    // Type guards for common Mongo/Mongoose error shapes
+    const isDuplicateKeyError = (e: unknown): e is { code: number } =>
+      typeof e === 'object' && e !== null && 'code' in e && typeof (e as { code: unknown }).code === 'number';
+
+    const isValidationError = (
+      e: unknown,
+    ): e is { name: string; errors: Record<string, { message?: unknown }> } => {
+      if (typeof e !== 'object' || e === null) return false;
+      const maybe = e as { name?: unknown; errors?: unknown };
+      return (
+        maybe.name === 'ValidationError' &&
+        typeof maybe.errors === 'object' &&
+        maybe.errors !== null
+      );
+    };
 
     // STEP 5: Handle specific errors gracefully.
     // If the error code is 11000, it's a duplicate key error (teamName is unique).
-    if (error.code === 11000) {
+    if (isDuplicateKeyError(unknownError) && unknownError.code === 11000) {
       return NextResponse.json(
         { message: 'A team with this name already exists.' },
         { status: 400 } // 400 means "Bad Request"
@@ -53,8 +69,12 @@ export async function POST(request: Request) {
     }
     
     // If it's a Mongoose validation error, compile the error messages.
-    if (error.name === 'ValidationError') {
-        const messages = Object.values(error.errors).map((val: any) => val.message);
+    if (isValidationError(unknownError)) {
+        const messages = Object.values(unknownError.errors).map((val) =>
+          typeof val === 'object' && val !== null && 'message' in val && typeof val.message === 'string'
+            ? val.message
+            : 'Validation error'
+        );
         return NextResponse.json(
             { message: `Validation failed: ${messages.join(', ')}` },
             { status: 400 }
