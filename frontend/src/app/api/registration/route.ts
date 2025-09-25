@@ -24,6 +24,14 @@ export async function POST(request: Request) {
     // STEP 1: Connect to the database.
     // Our helper function ensures we use a cached connection if available.
     await dbConnect();
+    
+    // Check if we have a valid MongoDB connection
+    if (!process.env.MONGODB_URI) {
+      return NextResponse.json(
+        { message: 'Database connection not configured. Please set MONGODB_URI environment variable.' },
+        { status: 503 } // Service Unavailable
+      );
+    }
 
     // STEP 2: Parse the data from the frontend.
     const data: RegistrationData = await request.json();
