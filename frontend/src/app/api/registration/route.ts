@@ -130,7 +130,7 @@ export async function POST(request: Request) {
             <br/>
             <p>Best of luck!</p>
             <p>The Hackathon Organizers</p>
-          `,
+          `
         });
       });
 
