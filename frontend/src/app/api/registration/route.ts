@@ -1,19 +1,26 @@
 import { NextResponse } from 'next/server';
+
 import dbConnect from '../../../../lib/dbConnect';
 import Registration from '../../../../models/Registration';
 import { handleError } from '../../../../lib/errorUtils.js';
 import { z } from 'zod';
 import nodemailer from 'nodemailer';
 
+
 interface TeamMember {
   id: number;
   name: string;
   email: string;
   phone: string;
+
   usn?: string;
   linkedin?: string;
   github?: string;
 }
+
+}
+
+
 interface RegistrationData {
   teamName: string;
   collegeName: string;
@@ -25,6 +32,7 @@ interface RegistrationData {
 
 export async function POST(request: Request) {
   try {
+
     await dbConnect();
 
     const data: RegistrationData = await request.json();
@@ -138,5 +146,30 @@ export async function POST(request: Request) {
 
   } catch (error: unknown) {
     return handleError(error);
+
+    const data: RegistrationData = await request.json();
+
+    if (!data.teamName || !data.collegeName || data.members.length < 2 || data.members.length > 4) {
+      return NextResponse.json(
+        { message: 'Validation failed: Invalid team name or member count.' },
+        { status: 400 }
+      );
+    }
+    
+
+    
+    
+
+    return NextResponse.json(
+      { message: 'Registration successful!', data: data },
+      { status: 201 } 
+    );
+
+  } catch (error) {
+    console.error('API Error:', error);
+    return NextResponse.json(
+      { message: 'An error occurred on the server.' },
+      { status: 500 } 
+
   }
 }
