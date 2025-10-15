@@ -2,19 +2,26 @@
   width: 100%;
   min-height: 100vh;
   padding: 80px 20px;
-  background-color: #000;
+  background: url('/images/rg-pg-bg.png') center center/cover no-repeat fixed, #000;
   display: flex;
   justify-content: center;
   align-items: center;
 }
+
+@media (max-width: 600px) {
+  .registrationSection {
+    background: url('/images/rg-pg-bg.png') center top/cover no-repeat fixed, #000;
+  }
+}
 .formContainer {
   width: 100%;
   max-width: 800px;
-  background-color: #111;
+  background: rgba(17, 17, 17, 0.7);
   border: 1px solid #333;
   border-radius: 16px;
   padding: 40px;
-  box-shadow: 0 10px 30px rgba(255, 5, 0, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
 }
 .title {
   color: #FF0500;
