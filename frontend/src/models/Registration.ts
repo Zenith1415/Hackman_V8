@@ -14,6 +14,32 @@ interface ISubmissionDetails {
   additionalNotes: string;
   submittedAt: Date | null;
 }
+interface IAIAnalysis {
+  aiGeneratedScore: number;
+  ideaUniqueness: number;
+  technicalComplexity: number;
+  ideaQuality: number;
+  overallScore: number;
+  detailedAnalysis: {
+    aiDetectionReasoning: string;
+    uniquenessReasoning: string;
+    complexityReasoning: string;
+    qualityReasoning: string;
+    strengths: string[];
+    weaknesses: string[];
+    recommendations: string[];
+    duplicacyCheck?: {
+      hasSimilar: boolean;
+      similarProjects: Array<{
+        teamName: string;
+        projectTitle: string;
+        similarityScore: number;
+        reason: string;
+      }>;
+    };
+  };
+  analyzedAt: Date;
+}
 interface IRegistration extends Document {
   teamName: string;
   collegeName: string;
@@ -28,6 +54,7 @@ interface IRegistration extends Document {
   submissionDetails: ISubmissionDetails;
   reviewComments: string;
   finalScore: number | null;
+  aiAnalysis?: IAIAnalysis;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -141,6 +168,10 @@ const RegistrationSchema = new Schema<IRegistration>({
   },
   finalScore: {
     type: Number,
+    default: null,
+  },
+  aiAnalysis: {
+    type: Schema.Types.Mixed,
     default: null,
   },
 }, { 

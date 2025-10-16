@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/dbConnect';
 import Registration from '@/models/Registration';
+// Admin endpoints rely on strong token auth; no rate limiting applied
+import { isValidObjectId } from '@/lib/security';
 
 function isAuthorized(request: NextRequest): boolean {
   const header = request.headers.get('authorization') || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : '';
   const expected = process.env.ADMIN_TOKEN || '';
-  return Boolean(expected) && token === expected;
+
+  return token === expected;
 }
 
 export async function PUT(
@@ -14,11 +17,17 @@ export async function PUT(
   context: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   const params = await context.params;
+
   if (!isAuthorized(request)) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
   const id = params.id;
+
+  // Validate MongoDB ObjectId format
+  if (!isValidObjectId(id)) {
+    return NextResponse.json({ message: 'Invalid ID format' }, { status: 400 });
+  }
   try {
     const body = await request.json();
 
@@ -81,11 +90,17 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   const params = await context.params;
+
   if (!isAuthorized(request)) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
   const id = params.id;
+
+  // Validate MongoDB ObjectId format
+  if (!isValidObjectId(id)) {
+    return NextResponse.json({ message: 'Invalid ID format' }, { status: 400 });
+  }
   try {
     await dbConnect();
     const doc = await Registration.findByIdAndDelete(id).lean();

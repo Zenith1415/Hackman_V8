@@ -66,6 +66,38 @@ export default function Hero() {
           0%, 100% { filter: brightness(1) drop-shadow(0 0 5px rgba(255, 120, 0, 0.3)); }
           50% { filter: brightness(1.1) drop-shadow(0 0 15px rgba(255, 120, 0, 0.6)); }
         }
+        @keyframes dateGlow {
+          0%, 100% { 
+            box-shadow: 
+              0 0 20px rgba(255, 7, 0, 0.6),
+              0 0 40px rgba(254, 119, 45, 0.4),
+              inset 0 0 20px rgba(255, 7, 0, 0.2);
+            transform: scale(1);
+          }
+          50% { 
+            box-shadow: 
+              0 0 30px rgba(255, 7, 0, 0.8),
+              0 0 60px rgba(254, 119, 45, 0.6),
+              inset 0 0 30px rgba(255, 7, 0, 0.3);
+            transform: scale(1.02);
+          }
+        }
+        @keyframes textShimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        @keyframes cornerPulse {
+          0%, 100% { 
+            transform: scale(1);
+            opacity: 0.8;
+            box-shadow: 0 0 10px rgba(255, 7, 0, 0.6);
+          }
+          50% { 
+            transform: scale(1.3);
+            opacity: 1;
+            box-shadow: 0 0 20px rgba(255, 7, 0, 1);
+          }
+        }
         .animate-float {
           animation: float 6s ease-in-out infinite;
         }
@@ -89,6 +121,20 @@ export default function Hero() {
         }
         .animate-house-glow {
           animation: houseGlow 8s ease-in-out infinite;
+        }
+        .animate-date-glow {
+          animation: dateGlow 3s ease-in-out infinite;
+        }
+        .animate-text-shimmer {
+          background: linear-gradient(90deg, #FE772D, #FF0700, #FE772D, #FF0700);
+          background-size: 200% 100%;
+          animation: textShimmer 2s linear infinite;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+        .animate-corner-pulse {
+          animation: cornerPulse 2s ease-in-out infinite;
         }
         .animate-in .hero-title {
           animation: fadeInUp 1.2s ease-out forwards;
@@ -323,19 +369,42 @@ export default function Hero() {
             <span className="text-[#FF0700]">Hackman</span>{' '}
             <span className="text-white">V8</span>
           </h1>
+          <div className="flex justify-start">
+            <a
+              href="/registration"
+              className={`${jolly.className} hero-button 
+                w-[35vw] h-[10vw] 
+                sm:w-[19vw] sm:h-[4.5vw] 
+                mt-6 bg-[#FE772D] text-gray-800 
+                rounded-[1rem] 
+                text-[5vw] sm:text-[2.8vw] 
+                flex items-center justify-center transform transition-all duration-300 hover:scale-105 hover:bg-[#E5691F] hover:shadow-xl hover-lift opacity-0`}
+            >
+              Register Now
+            </a>
+          </div>
+          <div className={`${jolly.className} hero-subtitle flex justify-start mt-4 mb-6 opacity-0`}>
+            <div className="relative inline-block animate-date-glow w-[35vw] sm:w-[19vw]">
+              <div className="absolute -inset-2 bg-gradient-to-r from-[#FF0700] via-[#FE772D] to-[#FF0700] rounded-xl blur-md opacity-90"></div>
+              <div className="absolute -inset-1 bg-gradient-to-r from-[#FE772D] via-[#FF0700] to-[#FE772D] rounded-lg blur-sm opacity-60"></div>
+              <div className="relative bg-gradient-to-br from-black/90 via-gray-900/90 to-black/90 px-8 py-4 rounded-xl border-2 border-[#FE772D] backdrop-blur-sm flex items-center justify-center">
+                <span className="animate-text-shimmer text-[3.5vw] sm:text-[1.8vw] font-bold tracking-wider drop-shadow-2xl text-center">
+                  31st October 2025
+                </span>
+                <div className="absolute -top-2 -left-2 w-4 h-4 bg-gradient-to-br from-[#FF0700] to-[#FE772D] rounded-full animate-corner-pulse"></div>
+                <div className="absolute -top-2 -right-2 w-4 h-4 bg-gradient-to-br from-[#FF0700] to-[#FE772D] rounded-full animate-corner-pulse" style={{animationDelay: '0.5s'}}></div>
+                <div className="absolute -bottom-2 -left-2 w-4 h-4 bg-gradient-to-br from-[#FF0700] to-[#FE772D] rounded-full animate-corner-pulse" style={{animationDelay: '1s'}}></div>
+                <div className="absolute -bottom-2 -right-2 w-4 h-4 bg-gradient-to-br from-[#FF0700] to-[#FE772D] rounded-full animate-corner-pulse" style={{animationDelay: '1.5s'}}></div>
+                
+                {/* Additional decorative elements */}
+                <div className="absolute top-1/2 -left-6 w-2 h-8 bg-gradient-to-b from-[#FE772D] to-transparent rounded-full opacity-60"></div>
+                <div className="absolute top-1/2 -right-6 w-2 h-8 bg-gradient-to-b from-[#FE772D] to-transparent rounded-full opacity-60"></div>
+                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 w-1 h-4 bg-gradient-to-b from-[#FF0700] to-transparent rounded-full opacity-70"></div>
+                <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 w-1 h-4 bg-gradient-to-b from-[#FF0700] to-transparent rounded-full opacity-70"></div>
+              </div>
+            </div>
+          </div>
           {}
-          <a
-            href="/registration"
-            className={`${jolly.className} hero-button 
-              w-[35vw] h-[10vw] 
-              sm:w-[19vw] sm:h-[4.5vw] 
-              mt-[8%] bg-[#FE772D] text-gray-800 
-              rounded-[1rem] 
-              text-[5vw] sm:text-[2.8vw] 
-              flex items-center justify-center transform transition-all duration-300 hover:scale-105 hover:bg-[#E5691F] hover:shadow-xl hover-lift opacity-0`}
-          >
-            Register Now
-          </a>
         </div>
       </div>
       <div className="hidden sm:block">

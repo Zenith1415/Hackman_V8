@@ -4,6 +4,13 @@ import Registration from '../../../models/Registration';
 import { handleError } from '../../../lib/errorUtils';
 import { z } from 'zod';
 import nodemailer from 'nodemailer';
+import { rateLimit, rateLimitConfigs } from '../../../lib/rateLimit';
+import { 
+  performSecurityCheck, 
+  parseAndValidateJson, 
+  createErrorResponse,
+  sanitizeString 
+} from '../../../lib/security';
 interface TeamMember {
   id: number;
   name: string;
@@ -23,8 +30,29 @@ interface RegistrationData {
 }
 export async function POST(request: Request) {
   try {
+    // Apply rate limiting
+    const rateLimitCheck = rateLimit(rateLimitConfigs.registration)(request);
+    if (rateLimitCheck) {
+      return rateLimitCheck;
+    }
+
+    // Perform security checks
+    const securityCheck = performSecurityCheck(request);
+    if (!securityCheck.passed) {
+      return createErrorResponse(
+        'Security validation failed: ' + securityCheck.reason,
+        403
+      );
+    }
+
+    // Validate request size and parse JSON (max 100KB for registration)
+    const jsonResult = await parseAndValidateJson<RegistrationData>(request, 100 * 1024);
+    if (!jsonResult.success) {
+      return createErrorResponse(jsonResult.error || 'Invalid request', 400);
+    }
+
     await dbConnect();
-    const data: RegistrationData = await request.json();
+    const data = jsonResult.data!;
     console.log('Received registration data:', JSON.stringify(data, null, 2));
     const teamMemberSchema = z.object({
       id: z.number(),
@@ -64,14 +92,14 @@ export async function POST(request: Request) {
     });
     const registrationSchema = z
       .object({
-        teamName: z.string().trim().min(1, 'Team name is required'),
-        collegeName: z.string().trim().min(1, 'College name is required'),
-        projectTitle: z.string().trim().min(1, 'Project title is required'),
+        teamName: z.string().trim().min(1, 'Team name is required').max(100, 'Team name too long'),
+        collegeName: z.string().trim().min(1, 'College name is required').max(200, 'College name too long'),
+        projectTitle: z.string().trim().min(1, 'Project title is required').max(200, 'Project title too long'),
         projectDescription: z
           .string()
           .trim()
           .min(1, 'Project description is required')
-          .max(500, 'Project description must be at most 500 characters'),
+          .max(1500, 'Project description must be at most 1500 characters'),
         teamLeadId: z.number().nullable().default(0),
         members: z.array(teamMemberSchema).min(2).max(4),
       })

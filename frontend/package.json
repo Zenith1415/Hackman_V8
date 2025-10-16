@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "docker": "^0.2.14",
     "mongodb": "^6.20.0",
     "mongoose": "^8.18.2",

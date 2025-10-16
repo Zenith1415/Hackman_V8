@@ -253,6 +253,7 @@ export default function DashboardPage() {
           {activeTab === 'overview' && teamData && (
             <TeamInfo 
               projectTitle={teamData.projectTitle}
+              projectDescription={teamData.projectDescription}
               teamLeadPhone={teamData.members[teamData.teamLeadId]?.phone || "N/A"}
               members={teamData.members.map((m, idx) => ({ 
                 name: m.name, 
@@ -261,6 +262,8 @@ export default function DashboardPage() {
                 isLead: idx === teamData.teamLeadId
               }))}
               teamLeadIndex={teamData.teamLeadId}
+              selectionStatus={teamData.selectionStatus}
+              submissionStatus={teamData.submissionStatus}
             />
           )}
           {activeTab === 'submission' && (

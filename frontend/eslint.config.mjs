@@ -19,6 +19,19 @@ const eslintConfig = [
       "build/**",
       "next-env.d.ts",
     ],
+    rules: {
+      // Allow unused variables prefixed with _ (common in catches/React deps)
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }
+      ],
+      // Relax exhaustive-deps warnings (we intentionally manage deps in some effects)
+      "react-hooks/exhaustive-deps": "warn",
+      // Allow <img> usage temporarily (Next/Image migration later)
+      "@next/next/no-img-element": "off",
+      // Prefer-const as warning not error
+      "prefer-const": "warn"
+    }
   },
 ];
 

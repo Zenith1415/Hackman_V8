@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 type Member = {
   name: string;
   email: string;
@@ -67,6 +68,8 @@ export default function AdminPage() {
   const [selectionFilter, setSelectionFilter] = useState<string>('all');
   const [submissionFilter, setSubmissionFilter] = useState<string>('all');
   const [paymentFilter, setPaymentFilter] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(20);
   useEffect(() => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
     if (saved) {
@@ -111,6 +114,18 @@ export default function AdminPage() {
       return matchesText && matchesSelection && matchesSubmission && matchesPayment;
     });
   }, [data, query, selectionFilter, submissionFilter, paymentFilter]);
+
+  // Pagination
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filtered.slice(startIndex, startIndex + itemsPerPage);
+  }, [filtered, currentPage, itemsPerPage]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query, selectionFilter, submissionFilter, paymentFilter]);
   function handleSubmitToken(e: React.FormEvent) {
     e.preventDefault();
     const trimmed = inputToken.trim();
@@ -323,7 +338,7 @@ export default function AdminPage() {
     );
   }
   return (
-    <div style={{ padding: '12px', color: '#000000ff', maxWidth: '100vw', overflowX: 'hidden' }}>
+    <div style={{ padding: '20px', color: '#000000ff', maxWidth: '100vw', overflowX: 'hidden', background: 'linear-gradient(to bottom right, #1a1a1a, #0a0a0a)', minHeight: '100vh' }}>
       <style jsx>{`
         @media (max-width: 768px) {
           .admin-header {
@@ -405,8 +420,8 @@ export default function AdminPage() {
           }
         }
       `}</style>
-      <div className="admin-header" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
-        <h2 style={{ fontSize: '20px', fontWeight: 700, marginRight: 'auto', color: '#FF0000', minWidth: 'fit-content' }}>Admin Dashboard</h2>
+      <div className="admin-header" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
+        <h2 style={{ fontSize: '28px', fontWeight: 700, marginRight: 'auto', color: '#FF0000', minWidth: 'fit-content', textShadow: '0 0 20px rgba(255, 0, 0, 0.5)' }}>🎃 Admin Dashboard</h2>
         <input
           placeholder="Search teams, members, codes..."
           value={query}
@@ -465,10 +480,72 @@ export default function AdminPage() {
         </button>
         </div>
       </div>
-      {loading && <p style={{ color: 'white' }}>Loading...</p>}
+      {loading && <p style={{ color: 'white', textAlign: 'center', fontSize: '18px', marginTop: '40px' }}>⏳ Loading...</p>}
       {error && (
-        <div style={{ color: 'crimson', marginBottom: 12 }}>
+        <div style={{ 
+          color: '#ff6b6b', 
+          marginBottom: 16, 
+          padding: '12px 16px', 
+          background: '#ff6b6b20', 
+          border: '1px solid #ff6b6b40', 
+          borderRadius: 8 
+        }}>
           {error}
+        </div>
+      )}
+      {!loading && data && (
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+          gap: 16, 
+          marginBottom: 24 
+        }}>
+          <div style={{ 
+            background: 'linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%)', 
+            padding: 20, 
+            borderRadius: 12, 
+            border: '1px solid #333',
+            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.5)'
+          }}>
+            <div style={{ fontSize: '32px', fontWeight: 700, color: '#FF0000' }}>{data.length}</div>
+            <div style={{ fontSize: '14px', color: '#999', marginTop: 4 }}>Total Teams</div>
+          </div>
+          <div style={{ 
+            background: 'linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%)', 
+            padding: 20, 
+            borderRadius: 12, 
+            border: '1px solid #333',
+            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.5)'
+          }}>
+            <div style={{ fontSize: '32px', fontWeight: 700, color: '#10b981' }}>
+              {data.filter(r => r.selectionStatus === 'selected').length}
+            </div>
+            <div style={{ fontSize: '14px', color: '#999', marginTop: 4 }}>Selected</div>
+          </div>
+          <div style={{ 
+            background: 'linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%)', 
+            padding: 20, 
+            borderRadius: 12, 
+            border: '1px solid #333',
+            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.5)'
+          }}>
+            <div style={{ fontSize: '32px', fontWeight: 700, color: '#3b82f6' }}>
+              {data.filter(r => r.submissionStatus === 'submitted' || r.submissionStatus === 'accepted').length}
+            </div>
+            <div style={{ fontSize: '14px', color: '#999', marginTop: 4 }}>Submissions</div>
+          </div>
+          <div style={{ 
+            background: 'linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%)', 
+            padding: 20, 
+            borderRadius: 12, 
+            border: '1px solid #333',
+            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.5)'
+          }}>
+            <div style={{ fontSize: '32px', fontWeight: 700, color: '#f59e0b' }}>
+              {data.filter(r => r.selectionStatus === 'pending').length}
+            </div>
+            <div style={{ fontSize: '14px', color: '#999', marginTop: 4 }}>Pending Review</div>
+          </div>
         </div>
       )}
       {editTarget && editForm && (
@@ -640,52 +717,115 @@ export default function AdminPage() {
           }} className="mobile-scroll-hint">
             ← Swipe left to see all columns →
           </div>
-          <div className="table-wrapper" style={{ overflowX: 'auto', border: '1px solid #eee', borderRadius: 8 }}>
+          <div className="table-wrapper" style={{ overflowX: 'auto', border: '1px solid #333', borderRadius: 12, background: '#0f0f0f' }}>
             <table className="admin-table" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, color: '#000' }}>
               <thead>
-              <tr style={{ background: '#fafafa' }}>
-                <th style={{ textAlign: 'left', padding: 12, color: '#000000' }}>Team</th>
-                <th style={{ textAlign: 'left', padding: 12, color: '#000000' }}>College</th>
-                <th style={{ textAlign: 'left', padding: 12, color: '#000000' }}>Project</th>
-                <th style={{ textAlign: 'left', padding: 12, color: '#000000' }}>Team Code</th>
-                <th style={{ textAlign: 'left', padding: 12, color: '#000000' }}>Submission</th>
-                <th style={{ textAlign: 'left', padding: 12, color: '#000000' }}>Selection</th>
-                <th style={{ textAlign: 'left', padding: 12, color: '#000000' }}>Payment</th>
-                <th style={{ textAlign: 'left', padding: 12, color: '#000000' }}>Members</th>
-                <th style={{ textAlign: 'left', padding: 12, whiteSpace: 'nowrap', color: '#000000' }}>Created</th>
-                <th style={{ textAlign: 'left', padding: 12, color: '#000000' }}>Actions</th>
+              <tr style={{ background: 'linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%)', borderBottom: '2px solid #FF0000' }}>
+                <th style={{ textAlign: 'left', padding: 16, color: '#FF0000', fontWeight: 700, fontSize: '14px' }}>Team</th>
+                <th style={{ textAlign: 'left', padding: 16, color: '#FF0000', fontWeight: 700, fontSize: '14px' }}>College</th>
+                <th style={{ textAlign: 'left', padding: 16, color: '#FF0000', fontWeight: 700, fontSize: '14px' }}>Project</th>
+                <th style={{ textAlign: 'left', padding: 16, color: '#FF0000', fontWeight: 700, fontSize: '14px' }}>Team Code</th>
+                <th style={{ textAlign: 'left', padding: 16, color: '#FF0000', fontWeight: 700, fontSize: '14px' }}>Submission</th>
+                <th style={{ textAlign: 'left', padding: 16, color: '#FF0000', fontWeight: 700, fontSize: '14px' }}>Selection</th>
+                <th style={{ textAlign: 'left', padding: 16, color: '#FF0000', fontWeight: 700, fontSize: '14px' }}>Payment</th>
+                <th style={{ textAlign: 'left', padding: 16, color: '#FF0000', fontWeight: 700, fontSize: '14px' }}>Members</th>
+                <th style={{ textAlign: 'left', padding: 16, whiteSpace: 'nowrap', color: '#FF0000', fontWeight: 700, fontSize: '14px' }}>Created</th>
+                <th style={{ textAlign: 'left', padding: 16, color: '#FF0000', fontWeight: 700, fontSize: '14px' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((r) => (
-                <tr key={r._id} style={{ background: '#1c1c1c', color: '#ffffff' }}>
-                  <td style={{ padding: 12, borderTop: '1px solid #333' }}>
+              {paginatedData.map((r) => (
+                <tr key={r._id} style={{ background: '#1c1c1c', color: '#ffffff', borderBottom: '1px solid #2a2a2a' }}>
+                  <td style={{ padding: 16, borderTop: '1px solid #2a2a2a' }}>
                     <div style={{ fontWeight: 600 }}>{r.teamName}</div>
                   </td>
-                  <td style={{ padding: 12, borderTop: '1px solid #333' }}>{r.collegeName}</td>
-                  <td style={{ padding: 12, borderTop: '1px solid #333' }}>
+                  <td style={{ padding: 16, borderTop: '1px solid #2a2a2a' }}>{r.collegeName}</td>
+                  <td style={{ padding: 16, borderTop: '1px solid #2a2a2a' }}>
                     <div style={{ fontWeight: 600 }}>{r.projectTitle}</div>
-                    <div style={{ color: '#ccc', maxWidth: 420, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{r.projectDescription}</div>
+                    <div style={{ color: '#999', maxWidth: 420, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', fontSize: '13px', marginTop: '4px' }}>{r.projectDescription}</div>
                   </td>
-                  <td style={{ padding: 12, borderTop: '1px solid #333' }}>{r.teamCode}</td>
-                  <td style={{ padding: 12, borderTop: '1px solid #333' }}>{r.submissionStatus}</td>
-                  <td style={{ padding: 12, borderTop: '1px solid #333' }}>{r.selectionStatus}</td>
-                  <td style={{ padding: 12, borderTop: '1px solid #333' }}>{r.paymentStatus || 'unpaid'}</td>
-                  <td style={{ padding: 12, borderTop: '1px solid #333' }}>
-                    <ul style={{ margin: 0, paddingLeft: 16 }}>
-                      {r.members.map((m, idx) => (
-                        <li key={idx}>
-                          <span style={{ fontWeight: 600 }}>{m.name}</span>
-                          {idx === r.teamLeadId && ' ⭐'} — {m.email}, {m.phone}
-                        </li>
-                      ))}
-                    </ul>
+                  <td style={{ padding: 16, borderTop: '1px solid #2a2a2a' }}>
+                    <span style={{ 
+                      background: 'linear-gradient(135deg, #FF0500 0%, #c53030 100%)', 
+                      padding: '4px 12px', 
+                      borderRadius: 6, 
+                      fontSize: '12px', 
+                      fontWeight: 'bold',
+                      display: 'inline-block'
+                    }}>
+                      {r.teamCode}
+                    </span>
                   </td>
-                  <td style={{ padding: 12, borderTop: '1px solid #333' }}>
-                    {r.createdAt ? new Date(r.createdAt).toLocaleString() : '-'}
+                  <td style={{ padding: 16, borderTop: '1px solid #2a2a2a' }}>
+                    <span style={{
+                      padding: '4px 10px',
+                      borderRadius: 6,
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      display: 'inline-block',
+                      background: r.submissionStatus === 'submitted' || r.submissionStatus === 'accepted' ? '#10b98120' : r.submissionStatus === 'rejected' ? '#ef444420' : '#4a556820',
+                      color: r.submissionStatus === 'submitted' || r.submissionStatus === 'accepted' ? '#10b981' : r.submissionStatus === 'rejected' ? '#ef4444' : '#9ca3af',
+                      border: `1px solid ${r.submissionStatus === 'submitted' || r.submissionStatus === 'accepted' ? '#10b98140' : r.submissionStatus === 'rejected' ? '#ef444440' : '#4a556840'}`
+                    }}>
+                      {r.submissionStatus.replace('_', ' ')}
+                    </span>
                   </td>
-                  <td style={{ padding: 12, borderTop: '1px solid #333' }}>
-                    <div style={{ display: 'flex', gap: 8 }}>
+                  <td style={{ padding: 16, borderTop: '1px solid #2a2a2a' }}>
+                    <span style={{
+                      padding: '4px 10px',
+                      borderRadius: 6,
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      display: 'inline-block',
+                      background: r.selectionStatus === 'selected' ? '#10b98120' : r.selectionStatus === 'rejected' ? '#ef444420' : r.selectionStatus === 'waitlisted' ? '#f59e0b20' : '#4a556820',
+                      color: r.selectionStatus === 'selected' ? '#10b981' : r.selectionStatus === 'rejected' ? '#ef4444' : r.selectionStatus === 'waitlisted' ? '#f59e0b' : '#9ca3af',
+                      border: `1px solid ${r.selectionStatus === 'selected' ? '#10b98140' : r.selectionStatus === 'rejected' ? '#ef444440' : r.selectionStatus === 'waitlisted' ? '#f59e0b40' : '#4a556840'}`
+                    }}>
+                      {r.selectionStatus}
+                    </span>
+                  </td>
+                  <td style={{ padding: 16, borderTop: '1px solid #2a2a2a' }}>
+                    <span style={{
+                      padding: '4px 10px',
+                      borderRadius: 6,
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      display: 'inline-block',
+                      background: (r.paymentStatus || 'unpaid') === 'verified' ? '#10b98120' : (r.paymentStatus || 'unpaid') === 'paid' ? '#3b82f620' : '#4a556820',
+                      color: (r.paymentStatus || 'unpaid') === 'verified' ? '#10b981' : (r.paymentStatus || 'unpaid') === 'paid' ? '#3b82f6' : '#9ca3af',
+                      border: `1px solid ${(r.paymentStatus || 'unpaid') === 'verified' ? '#10b98140' : (r.paymentStatus || 'unpaid') === 'paid' ? '#3b82f640' : '#4a556840'}`
+                    }}>
+                      {r.paymentStatus || 'unpaid'}
+                    </span>
+                  </td>
+                  <td style={{ padding: 16, borderTop: '1px solid #2a2a2a' }}>
+                    <div style={{ fontSize: '13px', color: '#ccc' }}>
+                      {r.members.length} member{r.members.length !== 1 ? 's' : ''}
+                    </div>
+                  </td>
+                  <td style={{ padding: 16, borderTop: '1px solid #2a2a2a', fontSize: '13px' }}>
+                    {r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '-'}
+                  </td>
+                  <td style={{ padding: 16, borderTop: '1px solid #2a2a2a' }}>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      <Link
+                        href={`/admin/${r.teamCode}`}
+                        style={{ 
+                          padding: '8px 16px', 
+                          borderRadius: 8, 
+                          background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', 
+                          color: '#fff', 
+                          border: 'none',
+                          fontWeight: 'bold',
+                          textDecoration: 'none',
+                          display: 'inline-block',
+                          cursor: 'pointer',
+                          boxShadow: '0 4px 15px rgba(59, 130, 246, 0.4)',
+                          transition: 'all 0.3s ease'
+                        }}
+                      >
+                        View
+                      </Link>
                       <button
                         onClick={() => openEdit(r)}
                         style={{ 
@@ -729,6 +869,145 @@ export default function AdminPage() {
             </tbody>
           </table>
         </div>
+        
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div style={{
+            marginTop: 16,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 12,
+            padding: '12px 16px',
+            background: '#1a1a1a',
+            borderRadius: 8,
+            border: '1px solid #333'
+          }}>
+            <div style={{ color: '#999', fontSize: '14px' }}>
+              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filtered.length)} of {filtered.length} team{filtered.length !== 1 ? 's' : ''}
+              {filtered.length !== data?.length && ` (${data?.length || 0} total)`}
+            </div>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {/* Items per page selector */}
+              <select 
+                value={itemsPerPage} 
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                style={{ 
+                  padding: '6px 10px', 
+                  border: '1px solid #444', 
+                  borderRadius: 6, 
+                  color: '#fff', 
+                  background: '#111',
+                  fontSize: '13px'
+                }}
+              >
+                <option value="10">10 per page</option>
+                <option value="20">20 per page</option>
+                <option value="50">50 per page</option>
+                <option value="100">100 per page</option>
+              </select>
+
+              {/* Pagination buttons */}
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: 6,
+                  background: currentPage === 1 ? '#222' : '#333',
+                  color: currentPage === 1 ? '#555' : '#fff',
+                  border: '1px solid #444',
+                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                  fontSize: '13px',
+                  fontWeight: 'bold'
+                }}
+              >
+                First
+              </button>
+              
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: 6,
+                  background: currentPage === 1 ? '#222' : '#333',
+                  color: currentPage === 1 ? '#555' : '#fff',
+                  border: '1px solid #444',
+                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                  fontSize: '13px',
+                  fontWeight: 'bold'
+                }}
+              >
+                ← Prev
+              </button>
+              
+              <div style={{ 
+                padding: '6px 12px', 
+                color: '#FF0000', 
+                fontWeight: 'bold',
+                fontSize: '13px'
+              }}>
+                Page {currentPage} of {totalPages}
+              </div>
+              
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: 6,
+                  background: currentPage === totalPages ? '#222' : '#333',
+                  color: currentPage === totalPages ? '#555' : '#fff',
+                  border: '1px solid #444',
+                  cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                  fontSize: '13px',
+                  fontWeight: 'bold'
+                }}
+              >
+                Next →
+              </button>
+              
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: 6,
+                  background: currentPage === totalPages ? '#222' : '#333',
+                  color: currentPage === totalPages ? '#555' : '#fff',
+                  border: '1px solid #444',
+                  cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                  fontSize: '13px',
+                  fontWeight: 'bold'
+                }}
+              >
+                Last
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Simple count when no pagination needed */}
+        {totalPages <= 1 && (
+          <div style={{ 
+            marginTop: 16, 
+            textAlign: 'center', 
+            color: '#999', 
+            fontSize: '14px',
+            padding: '12px',
+            background: '#1a1a1a',
+            borderRadius: 8,
+            border: '1px solid #333'
+          }}>
+            Showing {filtered.length} of {data?.length || 0} team{(data?.length || 0) !== 1 ? 's' : ''}
+          </div>
+        )}
         </>
       )}
     </div>

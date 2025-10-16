@@ -354,7 +354,7 @@ const RegistrationForm: React.FC = () => {
                         className={styles.textarea}
                         value={projectDescription}
                         onChange={(e) => setProjectDescription(e.target.value)}
-                        maxLength={500}
+                        maxLength={1500}
                         rows={5}
                         placeholder="Describe your project idea in a few sentences..."
                         required
@@ -362,7 +362,7 @@ const RegistrationForm: React.FC = () => {
                      {!isNonEmpty(projectDescription) && hasTriedSubmit && (
                         <small className={styles.errorText}>*Project description is required</small>
                     )}
-                    <small className={styles.charCount}>{500 - projectDescription.length} characters remaining</small>
+                    <small className={styles.charCount}>{1500 - projectDescription.length} characters remaining</small>
                 </div>
             </div>
           </fieldset>

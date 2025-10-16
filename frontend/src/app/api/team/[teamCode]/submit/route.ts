@@ -3,6 +3,14 @@ import dbConnect from '../../../../../lib/dbConnect';
 import Registration from '../../../../../models/Registration';
 import { handleError } from '../../../../../lib/errorUtils';
 import { z } from 'zod';
+import { rateLimit, rateLimitConfigs } from '../../../../../lib/rateLimit';
+import { 
+  performSecurityCheck, 
+  createErrorResponse,
+  parseAndValidateJson,
+  sanitizeString,
+  sanitizeSearchParams
+} from '../../../../../lib/security';
 
 const submissionSchema = z.object({
   githubRepo: z.string().url('GitHub repository must be a valid URL'),
@@ -16,25 +24,51 @@ export async function POST(
   { params }: { params: Promise<{ teamCode: string }> }
 ) {
   try {
+    // Apply rate limiting for submissions
+    const rateLimitCheck = rateLimit(rateLimitConfigs.teamSubmission)(request);
+    if (rateLimitCheck) {
+      return rateLimitCheck;
+    }
+
+    // Perform security checks
+    const securityCheck = performSecurityCheck(request);
+    if (!securityCheck.passed) {
+      return createErrorResponse(
+        'Security validation failed: ' + securityCheck.reason,
+        403
+      );
+    }
+
+    // Validate request size and parse JSON (max 50KB for submission)
+    const jsonResult = await parseAndValidateJson(request, 50 * 1024);
+    if (!jsonResult.success) {
+      return createErrorResponse(jsonResult.error || 'Invalid request', 400);
+    }
+
     await dbConnect();
     const { teamCode } = await params;
     const { searchParams } = new URL(request.url);
-    const projectName = searchParams.get('projectName');
-    const data = await request.json();
+    const sanitizedParams = sanitizeSearchParams(searchParams);
+    const projectName = sanitizedParams.projectName;
+    const data = jsonResult.data;
 
-    if (!teamCode) {
+    if (!teamCode || !teamCode.trim()) {
       return NextResponse.json(
         { message: 'Team code is required' },
         { status: 400 }
       );
     }
 
-    if (!projectName) {
+    if (!projectName || !projectName.trim()) {
       return NextResponse.json(
-  { message: 'Project title is required' },
+        { message: 'Project title is required' },
         { status: 400 }
       );
     }
+
+    // Sanitize inputs
+    const sanitizedTeamCode = sanitizeString(teamCode).substring(0, 20);
+    const sanitizedProjectName = sanitizeString(projectName).substring(0, 200);
 
     // Validate submission data
     const parsed = submissionSchema.safeParse(data);
@@ -50,9 +84,12 @@ export async function POST(
       );
     }
 
+    // Escape regex special characters
+    const escapedProjectName = sanitizedProjectName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
     const team = await Registration.findOne({
-      projectTitle: { $regex: new RegExp(`^${projectName.trim()}$`, 'i') },
-      'members.0.phone': teamCode
+      projectTitle: { $regex: new RegExp(`^${escapedProjectName}$`, 'i') },
+      'members.0.phone': sanitizedTeamCode
     });
 
     if (!team) {
@@ -73,8 +110,8 @@ export async function POST(
     // Update submission details and status
     const updatedTeam = await Registration.findOneAndUpdate(
       {
-        projectTitle: { $regex: new RegExp(`^${projectName.trim()}$`, 'i') },
-        'members.0.phone': teamCode
+        projectTitle: { $regex: new RegExp(`^${escapedProjectName}$`, 'i') },
+        'members.0.phone': sanitizedTeamCode
       },
       {
         submissionDetails: {
