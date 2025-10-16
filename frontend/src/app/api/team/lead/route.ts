@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     const team = await Registration.findOne({
       $expr: {
         $and: [
-          { $eq: [ { $arrayElemAt: [ "$members.email", "$teamLeadId" ] }, email.trim() ] },
+          { $eq: [ { $toLower: { $arrayElemAt: [ "$members.email", "$teamLeadId" ] } }, email.trim().toLowerCase() ] },
           { $eq: [ { $arrayElemAt: [ "$members.phone", "$teamLeadId" ] }, phone.trim() ] }
         ]
       }

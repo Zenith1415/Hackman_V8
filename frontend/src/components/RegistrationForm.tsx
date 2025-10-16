@@ -140,9 +140,9 @@ const RegistrationForm: React.FC = () => {
       if (response.ok) {
         const teamLeadIndex = members.findIndex((m) => m.id === teamLeadId);
         const teamLead = members[teamLeadIndex];
-        sessionStorage.setItem('autoLoginEmail', teamLead.email.trim());
-        sessionStorage.setItem('autoLoginPhone', teamLead.phone.trim());
-        sessionStorage.setItem('isNewRegistration', 'true');
+        localStorage.setItem('leadEmail', teamLead.email.trim());
+        localStorage.setItem('phone', teamLead.phone.trim());
+        localStorage.setItem('isNewRegistration', 'true');
         toast.success('Registration successful! Redirecting to dashboard...', { duration: 2000 });
         setTimeout(() => {
           router.push('/dashboard');
@@ -350,7 +350,7 @@ const RegistrationForm: React.FC = () => {
             </div>
           </fieldset>
           <button type="submit" className={`${styles.submitButton} ${nosifer.className}`} disabled={isSubmitting}>
-            {isSubmitting ? 'Submitting…' : 'Submit Registration'}
+            {isSubmitting ? 'Registering…' : 'Register'}
           </button>
         </form>
       </div>

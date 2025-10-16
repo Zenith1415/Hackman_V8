@@ -40,6 +40,8 @@ const MemberSchema = new Schema<IMember>({
     type: String,
     required: [true, "Please provide the member's email."],
     match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please fill a valid email address'],
+    trim: true,
+    lowercase: true,
   },
   phone: {
     type: String,

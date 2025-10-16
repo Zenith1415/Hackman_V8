@@ -37,9 +37,9 @@ export default function RootLayout({
           position="top-center" 
           reverseOrder={false}
           containerStyle={{
-            top: 80,
-            maxHeight: '70px',
-            minHeight: '70px',
+            top: 10,
+            maxHeight: '140px',
+            minHeight: '140px',
             overflow: 'hidden',
           }}
           gutter={0}
