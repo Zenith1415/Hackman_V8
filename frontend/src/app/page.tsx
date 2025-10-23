@@ -35,6 +35,7 @@ export default function Home() {
   const handleIntroComplete = () => {
     // Mark welcome screen as shown for this session
     sessionStorage.setItem('welcomeScreenShown', 'true');
+    // Show main content after button expansion completes
     setIsLoading(false);
   };
 
@@ -75,4 +76,4 @@ export default function Home() {
       )}
     </>
   );
-}
+} 

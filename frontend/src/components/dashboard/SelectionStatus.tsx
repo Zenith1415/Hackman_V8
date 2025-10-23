@@ -152,14 +152,14 @@ const SelectionStatus: React.FC<SelectionStatusProps> = ({ teamData }) => {
                   {}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
                     <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(`upi://pay?pa=${process.env.NEXT_PUBLIC_UPI_ID || ''}&pn=${process.env.NEXT_PUBLIC_UPI_NAME || 'Organizer'}&am=${process.env.NEXT_PUBLIC_FEES || '500'}&cu=INR`)}`}
-                      alt="UPI QR"
+                      src="/skull.png"
+                      alt="UPI QR (Skull)"
                       width={220}
                       height={220}
-                      style={{ borderRadius: 12, border: '1px solid #222' }}
+                      style={{ borderRadius: 12, border: '1px solid #222', objectFit: 'contain', background: '#fff' }}
                     />
                     <div style={{ color: '#a0aec0' }}>
-                      Scan the QR with any UPI app. Suggested amount: ₹{process.env.NEXT_PUBLIC_FEES || '500'}.
+                      Scan the QR with any UPI app. amount: ₹{process.env.NEXT_PUBLIC_FEES || '600'}.
                     </div>
                   </div>
                 </div>

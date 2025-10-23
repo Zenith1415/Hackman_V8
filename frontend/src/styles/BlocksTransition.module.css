@@ -1,0 +1,23 @@
+.block-tile {
+  position: absolute;
+  top: 0;
+  width: 16.666%;
+  height: 100%;
+  background: black; /* tile color */
+  transform: translateY(-100%);
+  opacity: 1;
+  transition: transform 0.8s ease-in-out, opacity 0.6s ease-in-out;
+}
+
+/* --- Tiles come in --- */
+.animate-tileIn {
+  transform: translateY(0);
+  transition-delay: calc(var(--i) * 0.1s);
+}
+
+/* --- Tiles fade + slide down --- */
+.animate-tileOut {
+  transform: translateY(100%);
+  opacity: 0;
+  transition-delay: calc(var(--i) * 0.1s);
+}

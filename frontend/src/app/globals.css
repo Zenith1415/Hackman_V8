@@ -28,6 +28,26 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Custom cursors: scythe for default, pumpkin for interactive elements
+   Use !important to override component CSS modules that set `cursor: pointer`.
+*/
+
+/* Scythe cursor as default for everything */
+html, body, *, *::before, *::after {
+  cursor: url('/scythe.png') 16 16, auto !important;
+}
+
+/* Pumpkin cursor for all interactive elements (buttons, links, etc.) */
+button, a, input[type="button"], input[type="submit"], input[type="reset"], 
+select, label[for], [role="button"], [onclick], .clickable {
+  cursor: url('/pumpkin-alt.png') 16 16, pointer !important;
+}
+
+/* Also apply to buttons and links on hover to ensure consistency */
+button:hover, a:hover, input[type="button"]:hover, input[type="submit"]:hover {
+  cursor: url('/pumpkin-alt.png') 16 16, pointer !important;
+}
+
 
 .font-jolly {
   font-family: var(--font-jolly);

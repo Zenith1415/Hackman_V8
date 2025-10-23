@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server';
 import dbConnect from '../../../lib/dbConnect';
 import Payment from '../../../models/Payment';
 import { rateLimit, rateLimitConfigs } from '../../../lib/rateLimit';
-import { 
-  performSecurityCheck, 
+import {
+  performSecurityCheck,
   createErrorResponse,
   sanitizeString,
   isValidEmail
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     const email = formData.get('email') as string;
     const message = formData.get('message') as string;
     const image = formData.get('image') as File | null;
-    
+
     // Validate and sanitize inputs
     if (!name || !email || !message) {
       return NextResponse.json({ error: 'Please fill all fields.' }, { status: 400 });

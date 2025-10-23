@@ -55,6 +55,19 @@ type Registration = {
   reviewComments?: string;
   finalScore?: number | null;
 };
+type Payment = {
+  _id: string;
+  name: string;
+  email: string;
+  message: string;
+  image?: {
+    data: Buffer;
+    contentType: string;
+    filename: string;
+  };
+  createdAt: Date;
+  updatedAt: Date;
+};
 export default function AdminPage() {
   const [token, setToken] = useState<string>("");
   const [inputToken, setInputToken] = useState<string>("");
@@ -70,6 +83,11 @@ export default function AdminPage() {
   const [paymentFilter, setPaymentFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(20);
+  const [payments, setPayments] = useState<Payment[] | null>(null);
+  const [loadingPayments, setLoadingPayments] = useState<boolean>(false);
+  const [paymentsError, setPaymentsError] = useState<string>("");
+  const [viewingPayment, setViewingPayment] = useState<Payment | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   useEffect(() => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
     if (saved) {
@@ -94,6 +112,45 @@ export default function AdminPage() {
       .catch((e) => setError(e.message || 'Failed to load'))
       .finally(() => setLoading(false));
   }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    setLoadingPayments(true);
+    setPaymentsError("");
+    fetch('/api/admin/payments', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const text = await res.text().catch(() => '');
+          throw new Error(text || 'Failed to fetch payments');
+        }
+        return res.json();
+      })
+      .then((json) => setPayments(json.data || []))
+      .catch((e) => setPaymentsError(e.message || 'Failed to load payments'))
+      .finally(() => setLoadingPayments(false));
+  }, [token]);
+
+  useEffect(() => {
+    if (viewingPayment && token) {
+      fetch(`/api/admin/payments/${viewingPayment._id}/image`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then(async (res) => {
+          if (res.ok) {
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            setImageUrl(url);
+          } else {
+            setImageUrl(null);
+          }
+        })
+        .catch(() => setImageUrl(null));
+    } else {
+      setImageUrl(null);
+    }
+  }, [viewingPayment, token]);
   const filtered = useMemo(() => {
     if (!data) return [] as Registration[];
     const text = query.trim().toLowerCase();
@@ -993,22 +1050,160 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Simple count when no pagination needed */}
-        {totalPages <= 1 && (
-          <div style={{ 
-            marginTop: 16, 
-            textAlign: 'center', 
-            color: '#999', 
-            fontSize: '14px',
-            padding: '12px',
-            background: '#1a1a1a',
-            borderRadius: 8,
-            border: '1px solid #333'
-          }}>
-            Showing {filtered.length} of {data?.length || 0} team{(data?.length || 0) !== 1 ? 's' : ''}
-          </div>
-        )}
+        {/* Payments Section */}
+        <div style={{ marginTop: 40, borderTop: '2px solid #FF0000', paddingTop: 20 }}>
+          <h2 style={{ fontSize: '28px', fontWeight: 700, marginBottom: 16, color: '#FF0000', textShadow: '0 0 20px rgba(255, 0, 0, 0.5)' }}>💰 Payment Submissions</h2>
+          
+          {loadingPayments && <p style={{ color: 'white', textAlign: 'center', fontSize: '18px', marginTop: '20px' }}>⏳ Loading payments...</p>}
+          {paymentsError && (
+            <div style={{ 
+              color: '#ff6b6b', 
+              marginBottom: 16, 
+              padding: '12px 16px', 
+              background: '#ff6b6b20', 
+              border: '1px solid #ff6b6b40', 
+              borderRadius: 8 
+            }}>
+              {paymentsError}
+            </div>
+          )}
+          
+          {!loadingPayments && payments && payments.length > 0 && (
+            <div className="table-wrapper" style={{ overflowX: 'auto', border: '1px solid #333', borderRadius: 12, background: '#0f0f0f' }}>
+              <table className="admin-table" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, color: '#000' }}>
+                <thead>
+                  <tr style={{ background: 'linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%)', borderBottom: '2px solid #FF0000' }}>
+                    <th style={{ textAlign: 'left', padding: 16, color: '#FF0000', fontWeight: 700, fontSize: '14px' }}>Name</th>
+                    <th style={{ textAlign: 'left', padding: 16, color: '#FF0000', fontWeight: 700, fontSize: '14px' }}>Email</th>
+                    <th style={{ textAlign: 'left', padding: 16, color: '#FF0000', fontWeight: 700, fontSize: '14px' }}>Message</th>
+                    <th style={{ textAlign: 'left', padding: 16, color: '#FF0000', fontWeight: 700, fontSize: '14px' }}>Submitted</th>
+                    <th style={{ textAlign: 'left', padding: 16, color: '#FF0000', fontWeight: 700, fontSize: '14px' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payments.map((payment) => (
+                    <tr key={payment._id} style={{ background: '#1c1c1c', color: '#ffffff', borderBottom: '1px solid #2a2a2a' }}>
+                      <td style={{ padding: 16, borderTop: '1px solid #2a2a2a' }}>
+                        <div style={{ fontWeight: 600 }}>{payment.name}</div>
+                      </td>
+                      <td style={{ padding: 16, borderTop: '1px solid #2a2a2a' }}>{payment.email}</td>
+                      <td style={{ padding: 16, borderTop: '1px solid #2a2a2a' }}>
+                        <div style={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{payment.message}</div>
+                      </td>
+                      <td style={{ padding: 16, borderTop: '1px solid #2a2a2a', fontSize: '13px' }}>
+                        {payment.createdAt ? new Date(payment.createdAt).toLocaleString() : '-'}
+                      </td>
+                      <td style={{ padding: 16, borderTop: '1px solid #2a2a2a' }}>
+                        <button
+                          onClick={() => setViewingPayment(payment)}
+                          style={{ 
+                            padding: '8px 16px', 
+                            borderRadius: 8, 
+                            background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', 
+                            color: '#fff', 
+                            border: 'none',
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 15px rgba(59, 130, 246, 0.4)',
+                            transition: 'all 0.3s ease'
+                          }}
+                        >
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          
+          {!loadingPayments && payments && payments.length === 0 && (
+            <p style={{ color: '#999', textAlign: 'center', marginTop: 20 }}>No payment submissions yet.</p>
+          )}
+        </div>
         </>
+      )}
+
+      {/* Payment View Modal */}
+      {viewingPayment && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="edit-modal"
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 1000 }}
+          onClick={() => {
+            setViewingPayment(null);
+            if (imageUrl) {
+              URL.revokeObjectURL(imageUrl);
+              setImageUrl(null);
+            }
+          }}
+        >
+          <div className="edit-content" onClick={(e) => e.stopPropagation()} style={{ width: 'min(600px, 95%)', background: '#0b0b0b', color: '#fff', borderRadius: 12, border: '1px solid #222', padding: 20, maxHeight: '90vh', overflow: 'auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 700, marginRight: 'auto' }}>Payment Submission</h3>
+              <button 
+                onClick={() => {
+                  setViewingPayment(null);
+                  if (imageUrl) {
+                    URL.revokeObjectURL(imageUrl);
+                    setImageUrl(null);
+                  }
+                }} 
+                style={{ 
+                  padding: '8px 16px', 
+                  borderRadius: 8, 
+                  background: 'linear-gradient(135deg, #4a5568 0%, #2d3748 100%)', 
+                  color: '#fff', 
+                  border: 'none',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3)',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                Close
+              </button>
+            </div>
+            <div style={{ display: 'grid', gap: 16 }}>
+              <div>
+                <label style={{ color: '#999', fontSize: '14px', fontWeight: 600 }}>Name</label>
+                <p style={{ color: '#fff', fontSize: '16px', marginTop: 4 }}>{viewingPayment.name}</p>
+              </div>
+              <div>
+                <label style={{ color: '#999', fontSize: '14px', fontWeight: 600 }}>Email</label>
+                <p style={{ color: '#fff', fontSize: '16px', marginTop: 4 }}>{viewingPayment.email}</p>
+              </div>
+              <div>
+                <label style={{ color: '#999', fontSize: '14px', fontWeight: 600 }}>Message</label>
+                <p style={{ color: '#fff', fontSize: '16px', marginTop: 4, whiteSpace: 'pre-wrap' }}>{viewingPayment.message}</p>
+              </div>
+              {viewingPayment.image && (
+                <div>
+                  <label style={{ color: '#999', fontSize: '14px', fontWeight: 600 }}>Payment Proof Image</label>
+                  <div style={{ marginTop: 8 }}>
+                    {imageUrl ? (
+                      <img
+                        src={imageUrl}
+                        alt="Payment Proof"
+                        style={{ maxWidth: '100%', maxHeight: '400px', borderRadius: 8, border: '1px solid #333' }}
+                      />
+                    ) : (
+                      <p style={{ color: '#999' }}>Loading image...</p>
+                    )}
+                  </div>
+                </div>
+              )}
+              <div>
+                <label style={{ color: '#999', fontSize: '14px', fontWeight: 600 }}>Submitted At</label>
+                <p style={{ color: '#fff', fontSize: '16px', marginTop: 4 }}>
+                  {viewingPayment.createdAt ? new Date(viewingPayment.createdAt).toLocaleString() : 'N/A'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
