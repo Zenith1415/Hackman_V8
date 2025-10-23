@@ -61,12 +61,12 @@ type Payment = {
   email: string;
   message: string;
   image?: {
-    data: Buffer;
+    data: ArrayBuffer;
     contentType: string;
     filename: string;
   };
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 };
 export default function AdminPage() {
   const [token, setToken] = useState<string>("");
@@ -910,8 +910,8 @@ export default function AdminPage() {
                           color: '#fff', 
                           border: 'none',
                           fontWeight: 'bold',
-                          cursor: !token ? 'not-allowed' : 'pointer',
-                          opacity: !token ? 0.5 : 1,
+                          cursor: 'not-allowed',
+                          opacity: 0.5,
                           boxShadow: '0 4px 15px rgba(239, 68, 68, 0.4)',
                           transition: 'all 0.3s ease'
                         }}

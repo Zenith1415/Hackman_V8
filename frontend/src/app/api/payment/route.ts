@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     await dbConnect();
 
     // Prepare payment data
-    const paymentData: any = {
+    const paymentData: Record<string, unknown> = {
       name: sanitizedName,
       email,
       message: sanitizedMessage,
