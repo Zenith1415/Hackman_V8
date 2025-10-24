@@ -16,7 +16,7 @@ export type Registration = {
   teamCode: string;
   submissionStatus: 'not_submitted' | 'submitted' | 'under_review' | 'accepted' | 'rejected';
   selectionStatus: 'pending' | 'selected' | 'waitlisted' | 'rejected';
-  paymentStatus?: 'unpaid' | 'paid' | 'verified';
+  paymentStatus?: 'unpaid' | 'pending' | 'paid' | 'verified';
   members: Member[];
   createdAt?: string;
   updatedAt?: string;

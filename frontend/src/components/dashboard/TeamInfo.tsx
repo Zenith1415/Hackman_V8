@@ -137,19 +137,6 @@ const TeamInfo: React.FC<TeamInfoProps> = ({ projectTitle, projectDescription, t
         </div>
       </div>
 
-      <div className={styles.projectInfoCard}>
-        <h3>Project Submission</h3>
-        <div className={styles.projectDetails}>
-          <div className={styles.detailItem}>
-            <span className={styles.detailLabel}>Project Title</span>
-            <span className={styles.detailValue}>{projectTitle}</span>
-          </div>
-          <div className={styles.detailItem}>
-            <span className={styles.detailLabel}>Project Description</span>
-            <span className={styles.detailValue} style={{ whiteSpace: 'pre-wrap' }}>{projectDescription}</span>
-          </div>
-        </div>
-      </div>
       <div className={styles.teamMembersSection}>
         <h3>Team Members</h3>
         <div className={styles.membersGrid}>

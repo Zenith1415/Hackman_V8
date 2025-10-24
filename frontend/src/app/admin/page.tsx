@@ -25,7 +25,7 @@ type EditFormType = {
   teamCode: string;
   submissionStatus: string;
   selectionStatus: string;
-  paymentStatus: 'unpaid' | 'paid' | 'verified';
+  paymentStatus: 'unpaid' | 'pending' | 'paid' | 'verified';
   reviewComments: string;
   finalScore: number | null;
   submissionDetails: SubmissionDetails;
@@ -41,7 +41,9 @@ type Registration = {
   teamCode: string;
   submissionStatus: string;
   selectionStatus: string;
-  paymentStatus?: 'unpaid' | 'paid' | 'verified';
+  paymentStatus?: 'unpaid' | 'pending' | 'paid' | 'verified';
+  paymentProof?: string;
+  paymentDate?: string;
   members: Member[];
   createdAt?: string;
   updatedAt?: string;
@@ -88,6 +90,7 @@ export default function AdminPage() {
   const [paymentsError, setPaymentsError] = useState<string>("");
   const [viewingPayment, setViewingPayment] = useState<Payment | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [viewingTeamPayment, setViewingTeamPayment] = useState<Registration | null>(null);
   useEffect(() => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
     if (saved) {
@@ -504,6 +507,7 @@ export default function AdminPage() {
         <select value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value)} style={{ padding: '8px 10px', border: '1px solid #ddd', borderRadius: 8, color: '#fff', background: '#111' }}>
           <option value="all">All Payments</option>
           <option value="unpaid">unpaid</option>
+          <option value="pending">pending</option>
           <option value="paid">paid</option>
           <option value="verified">verified</option>
         </select>
@@ -848,9 +852,9 @@ export default function AdminPage() {
                       fontSize: '12px',
                       fontWeight: 600,
                       display: 'inline-block',
-                      background: (r.paymentStatus || 'unpaid') === 'verified' ? '#10b98120' : (r.paymentStatus || 'unpaid') === 'paid' ? '#3b82f620' : '#4a556820',
-                      color: (r.paymentStatus || 'unpaid') === 'verified' ? '#10b981' : (r.paymentStatus || 'unpaid') === 'paid' ? '#3b82f6' : '#9ca3af',
-                      border: `1px solid ${(r.paymentStatus || 'unpaid') === 'verified' ? '#10b98140' : (r.paymentStatus || 'unpaid') === 'paid' ? '#3b82f640' : '#4a556840'}`
+                      background: (r.paymentStatus || 'unpaid') === 'verified' ? '#10b98120' : (r.paymentStatus || 'unpaid') === 'paid' ? '#3b82f620' : (r.paymentStatus || 'unpaid') === 'pending' ? '#f59e0b20' : '#4a556820',
+                      color: (r.paymentStatus || 'unpaid') === 'verified' ? '#10b981' : (r.paymentStatus || 'unpaid') === 'paid' ? '#3b82f6' : (r.paymentStatus || 'unpaid') === 'pending' ? '#f59e0b' : '#9ca3af',
+                      border: `1px solid ${(r.paymentStatus || 'unpaid') === 'verified' ? '#10b98140' : (r.paymentStatus || 'unpaid') === 'paid' ? '#3b82f640' : (r.paymentStatus || 'unpaid') === 'pending' ? '#f59e0b40' : '#4a556840'}`
                     }}>
                       {r.paymentStatus || 'unpaid'}
                     </span>
@@ -883,6 +887,24 @@ export default function AdminPage() {
                       >
                         View
                       </Link>
+                      {r.paymentProof && (
+                        <button
+                          onClick={() => setViewingTeamPayment(r)}
+                          style={{ 
+                            padding: '8px 16px', 
+                            borderRadius: 8, 
+                            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', 
+                            color: '#fff', 
+                            border: 'none',
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 15px rgba(245, 158, 11, 0.4)',
+                            transition: 'all 0.3s ease'
+                          }}
+                        >
+                          Payment Proof
+                        </button>
+                      )}
                       <button
                         onClick={() => openEdit(r)}
                         style={{ 
@@ -1201,6 +1223,75 @@ export default function AdminPage() {
                   {viewingPayment.createdAt ? new Date(viewingPayment.createdAt).toLocaleString() : 'N/A'}
                 </p>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Team Payment Proof View Modal */}
+      {viewingTeamPayment && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="edit-modal"
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 1000 }}
+          onClick={() => setViewingTeamPayment(null)}
+        >
+          <div className="edit-content" onClick={(e) => e.stopPropagation()} style={{ width: 'min(700px, 95%)', background: '#0b0b0b', color: '#fff', borderRadius: 12, border: '1px solid #222', padding: 20, maxHeight: '90vh', overflow: 'auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 700, marginRight: 'auto' }}>Payment Proof - {viewingTeamPayment.teamName}</h3>
+              <button 
+                onClick={() => setViewingTeamPayment(null)} 
+                style={{ 
+                  padding: '8px 16px', 
+                  borderRadius: 8, 
+                  background: 'linear-gradient(135deg, #4a5568 0%, #2d3748 100%)', 
+                  color: '#fff', 
+                  border: 'none',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3)',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                Close
+              </button>
+            </div>
+            <div style={{ display: 'grid', gap: 16 }}>
+              <div>
+                <label style={{ color: '#999', fontSize: '14px', fontWeight: 600 }}>Team Name</label>
+                <p style={{ color: '#fff', fontSize: '16px', marginTop: 4 }}>{viewingTeamPayment.teamName}</p>
+              </div>
+              <div>
+                <label style={{ color: '#999', fontSize: '14px', fontWeight: 600 }}>Team Code</label>
+                <p style={{ color: '#fff', fontSize: '16px', marginTop: 4 }}>{viewingTeamPayment.teamCode}</p>
+              </div>
+              <div>
+                <label style={{ color: '#999', fontSize: '14px', fontWeight: 600 }}>Payment Status</label>
+                <p style={{ color: '#fff', fontSize: '16px', marginTop: 4, textTransform: 'uppercase' }}>
+                  {viewingTeamPayment.paymentStatus || 'unpaid'}
+                </p>
+              </div>
+              {viewingTeamPayment.paymentDate && (
+                <div>
+                  <label style={{ color: '#999', fontSize: '14px', fontWeight: 600 }}>Payment Date</label>
+                  <p style={{ color: '#fff', fontSize: '16px', marginTop: 4 }}>
+                    {new Date(viewingTeamPayment.paymentDate).toLocaleDateString()}
+                  </p>
+                </div>
+              )}
+              {viewingTeamPayment.paymentProof && (
+                <div>
+                  <label style={{ color: '#999', fontSize: '14px', fontWeight: 600 }}>Payment Proof Image</label>
+                  <div style={{ marginTop: 8 }}>
+                    <img
+                      src={viewingTeamPayment.paymentProof}
+                      alt="Payment Proof"
+                      style={{ maxWidth: '100%', maxHeight: '500px', borderRadius: 8, border: '1px solid #333' }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -12,10 +12,13 @@ import { AboutHackman } from '@/components/About';
 import Timeline from '@/components/Timeline/Timeline';
 import WelcomeScreen from '@/components/WelcomeScreen';
 import BackgroundAudio from '@/components/BackgroundAudio';
+import TypewriterText from '@/components/TypewriterText';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [showTypewriter, setShowTypewriter] = useState(false);
 
   useEffect(() => {
     // Check if user has already seen the welcome screen in this session
@@ -35,15 +38,48 @@ export default function Home() {
   const handleIntroComplete = () => {
     // Mark welcome screen as shown for this session
     sessionStorage.setItem('welcomeScreenShown', 'true');
-    // Show main content after button expansion completes
+    // Show typewriter screen
+    setShowTypewriter(true);
+  };
+
+  const handleTypewriterComplete = () => {
+    setShowTypewriter(false);
     setIsLoading(false);
   };
 
   return (
     <>
-      {isLoading && showWelcome ? (
-        <WelcomeScreen onComplete={handleIntroComplete} />
-      ) : (
+      <AnimatePresence>
+        {isLoading && showWelcome && (
+          <WelcomeScreen onComplete={handleIntroComplete} />
+        )}
+      </AnimatePresence>
+      {showTypewriter && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            backgroundColor: '#000',
+            zIndex: 20000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <TypewriterText 
+            text="Be Ready...<br/>For B/Witching The Binary."
+            onComplete={handleTypewriterComplete}
+          />
+        </motion.div>
+      )}
+      {!isLoading && !showTypewriter && (
         <>
           {/* Background audio plays only after welcome screen */}
           <BackgroundAudio />
@@ -76,4 +112,4 @@ export default function Home() {
       )}
     </>
   );
-} 
+}

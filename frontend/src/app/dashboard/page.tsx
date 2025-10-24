@@ -8,6 +8,7 @@ import TeamInfo from '@/components/dashboard/TeamInfo';
 import SubmissionStatus from '@/components/dashboard/SubmissionStatus';
 import SelectionStatus from '@/components/dashboard/SelectionStatus';
 import ProjectSubmission from '@/components/dashboard/ProjectSubmission';
+import PaymentManagement from '@/components/dashboard/PaymentManagement';
 import styles from '@/styles/Dashboard.module.css';
 
 const nosifer = Nosifer({
@@ -57,7 +58,7 @@ export default function DashboardPage() {
   const [teamData, setTeamData] = useState<TeamData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'submission' | 'status'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'submission' | 'status' | 'payment'>('overview');
 
   
   useEffect(() => {
@@ -247,6 +248,14 @@ export default function DashboardPage() {
           >
             Selection Status
           </button>
+          {teamData?.selectionStatus === 'selected' && (
+            <button
+              className={`${styles.tabButton} ${activeTab === 'payment' ? styles.active : ''}`}
+              onClick={() => setActiveTab('payment')}
+            >
+              Payment
+            </button>
+          )}
         </nav>
 
         <div className={styles.tabContent}>
@@ -277,6 +286,12 @@ export default function DashboardPage() {
               <SubmissionStatus teamData={teamData} />
               <SelectionStatus teamData={teamData} />
             </div>
+          )}
+          {activeTab === 'payment' && teamData?.selectionStatus === 'selected' && (
+            <PaymentManagement 
+              teamData={teamData} 
+              onUpdate={updateTeamData}
+            />
           )}
         </div>
       </div>

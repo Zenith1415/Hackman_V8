@@ -57,7 +57,7 @@ type TeamData = {
   teamCode: string;
   submissionStatus: string;
   selectionStatus: string;
-  paymentStatus?: 'unpaid' | 'paid' | 'verified';
+  paymentStatus?: 'unpaid' | 'pending' | 'paid' | 'verified';
   members: Member[];
   createdAt?: string;
   updatedAt?: string;

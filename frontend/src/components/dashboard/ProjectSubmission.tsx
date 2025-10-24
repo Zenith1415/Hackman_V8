@@ -101,6 +101,19 @@ const ProjectSubmission: React.FC<ProjectSubmissionProps> = ({ teamData, onUpdat
     <div className={styles.submissionContainer}>
       <div className={styles.statusCard}>
         <h3 className={styles.cardTitle}>Project Submission</h3>
+        
+        {/* Project Information Display */}
+        <div className={styles.projectInfo}>
+          <div className={styles.projectTitle}>
+            <h4>Project Title</h4>
+            <p>{teamData.projectTitle}</p>
+          </div>
+          <div className={styles.projectDescription}>
+            <h4>Project Description</h4>
+            <p>{teamData.projectDescription}</p>
+          </div>
+        </div>
+        
         {canSubmit ? (
           <form onSubmit={handleSubmit} className={styles.submissionForm}>
             <div className={styles.formGroup}>
