@@ -38,6 +38,9 @@ interface TeamData {
   members: TeamMember[];
   submissionStatus: 'not_submitted' | 'submitted' | 'under_review' | 'accepted' | 'rejected';
   selectionStatus: 'pending' | 'selected' | 'waitlisted' | 'rejected';
+  paymentStatus?: 'unpaid' | 'pending' | 'paid' | 'verified';
+  paymentProof?: string;
+  paymentDate?: string;
   submissionDetails: {
     githubRepo: string;
     liveDemo: string;
@@ -49,6 +52,12 @@ interface TeamData {
   finalScore: number | null;
   createdAt: string;
   updatedAt: string;
+}
+
+interface PaymentData {
+  paymentStatus?: 'unpaid' | 'pending' | 'paid' | 'verified';
+  paymentProof?: string;
+  paymentDate?: string;
 }
 
 export default function DashboardPage() {
@@ -126,6 +135,16 @@ export default function DashboardPage() {
 
   const updateTeamData = (updatedData: Partial<TeamData>) => {
     setTeamData(prev => prev ? { ...prev, ...updatedData } : null);
+  };
+
+  const updatePaymentData = (updatedData: Partial<PaymentData>) => {
+    // Convert PaymentData to TeamData format
+    const teamDataUpdate: Partial<TeamData> = {
+      paymentStatus: updatedData.paymentStatus,
+      paymentProof: updatedData.paymentProof,
+      paymentDate: updatedData.paymentDate,
+    };
+    updateTeamData(teamDataUpdate);
   };
 
   if (!isAuthenticated) {
@@ -290,7 +309,7 @@ export default function DashboardPage() {
           {activeTab === 'payment' && teamData?.selectionStatus === 'selected' && (
             <PaymentManagement 
               teamData={teamData} 
-              onUpdate={updateTeamData}
+              onUpdate={updatePaymentData}
             />
           )}
         </div>
