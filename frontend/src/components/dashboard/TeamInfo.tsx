@@ -39,7 +39,7 @@ const TeamInfo: React.FC<TeamInfoProps> = ({ projectTitle, projectDescription, t
         return {
           color: '#fbbf24',
           icon: '💳',
-          title: 'Payment Due!',
+          title: 'Payment Due! complete payment before 3pm 29th oct !',
           message: 'Complete payment ASAP to confirm your spot. Go to Payment tab to upload proof.'
         };
       }
