@@ -4,6 +4,7 @@ import Registration from '@/models/Registration';
 // Admin endpoints rely on strong token auth; no rate limiting applied
 import { sanitizeString } from '@/lib/security';
 import { sendSelectionEmail, sendPaymentVerificationEmail } from '@/lib/selectionEmail';
+import { sendRejectionEmail } from '@/lib/rejectionEmail';
 
 function isAuthorized(request: NextRequest): boolean {
   const header = request.headers.get('authorization') || '';
@@ -98,6 +99,34 @@ export async function PUT(
         await sendSelectionEmail({ teamName: team.teamName, teamCode: team.teamCode, recipients });
       } catch (emailErr) {
         console.error('Failed to send selection email(s):', emailErr);
+      }
+    }
+
+    // If transitioning to rejected, send rejection email to team lead only
+    const transitionedToRejected = selectionStatus === 'rejected' && existing && existing.selectionStatus !== 'rejected';
+    if (transitionedToRejected && team) {
+      try {
+        type MemberLike = { email?: string };
+        const membersUnknown: unknown = (team as unknown as { members?: unknown }).members;
+        const teamLeadIndex = typeof (team as unknown as { teamLeadId?: unknown }).teamLeadId === 'number'
+          ? (team as unknown as { teamLeadId: number }).teamLeadId
+          : 0;
+        let recipients: string[] = [];
+        if (Array.isArray(membersUnknown)) {
+          const members = membersUnknown as MemberLike[];
+          const leadEmail = members[teamLeadIndex]?.email;
+          if (typeof leadEmail === 'string' && leadEmail.length > 0) {
+            recipients = [leadEmail];
+          } else {
+            const first = members.find(m => typeof m.email === 'string' && m.email.length > 0)?.email;
+            if (first) recipients = [first];
+          }
+        }
+        console.info(`Attempting to send rejection email to team ${team.teamCode} with recipients:`, recipients);
+        await sendRejectionEmail({ teamName: team.teamName, teamCode: team.teamCode, recipients });
+        console.info(`Rejection email sent successfully for team ${team.teamCode}`);
+      } catch (emailErr) {
+        console.error('Failed to send rejection email(s):', emailErr);
       }
     }
 
