@@ -2,14 +2,19 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Allow building from repo root or from frontend/ by switching APP_DIR
+# - If building from repo root: APP_DIR=frontend (default below)
+# - If building with context set to ./frontend: APP_DIR=.
+ARG APP_DIR=frontend
+ENV APP_DIR=${APP_DIR}
 
-# Install dependencies
-RUN npm install
+# Copy package files and install dependencies reproducibly
+COPY ${APP_DIR}/package*.json ./
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN npm ci --no-audit --no-fund
 
 # Copy source code
-COPY . .
+COPY ${APP_DIR}/. .
 
 # Only build-time public variables
 ARG NEXT_PUBLIC_URL
