@@ -1,0 +1,119 @@
+/* --- Main Container --- */
+.pageContainer {
+  padding: 40px 20px;
+  max-width: 900px;
+  margin: 40px auto;
+  font-family: var(--font-geist-sans), sans-serif;
+  background-color: #111;
+  color: #ccc;
+  border-radius: 12px;
+  border: 1px solid #333;
+  box-shadow: 0 5px 20px rgba(255, 5, 0, 0.1);
+}
+
+/* --- Titles --- */
+.title {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #FF0500; /* Red */
+  letter-spacing: 1px;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.subTitle {
+  text-align: center;
+  margin-bottom: 40px;
+  color: #FF8C00; /* Orange */
+  font-weight: 300;
+}
+
+/* --- Table Styles --- */
+.tableWrapper {
+  overflow-x: auto; /* Allow horizontal scrolling on small screens */
+  margin-top: 30px;
+}
+
+.table {
+  width: 100%;
+  min-width: 600px; /* Ensure table has a minimum width before scrolling */
+  border-collapse: collapse;
+  background-color: #0d0d0d;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table th {
+  border-bottom: 2px solid #FF0500;
+  padding: 16px 12px;
+  text-align: center;
+  color: #eee;
+  background-color: #1f1f1f;
+  text-transform: capitalize;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  white-space: nowrap; /* Keep headers on one line */
+}
+
+.table th:first-child { /* Member Name header */
+  text-align: left;
+  width: 30%; /* Give more space to names */
+}
+
+.table td {
+  border-bottom: 1px solid #333;
+  padding: 14px 12px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.table tr:last-child td {
+  border-bottom: none; /* Remove border from last row */
+}
+
+.table tbody tr:nth-child(even) {
+  background-color: #1a1a1a; /* Zebra striping */
+}
+.table tbody tr:nth-child(odd) {
+  background-color: #0d0d0d;
+}
+
+.memberNameCell {
+  text-align: left;
+  color: #e2e8f0;
+  font-weight: 500;
+}
+
+.checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #FF0500;
+  vertical-align: middle;
+}
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 768px) {
+  .pageContainer {
+    padding: 20px 15px;
+    margin: 20px auto;
+  }
+
+  .title {
+    font-size: 2rem; /* Smaller title */
+  }
+
+  .subTitle {
+    font-size: 1rem; /* Smaller subtitle */
+    margin-bottom: 30px;
+  }
+
+  .table th,
+  .table td {
+    padding: 12px 8px; /* Reduce padding in table cells */
+    font-size: 0.9rem;
+  }
+
+  .table th:first-child {
+    width: auto; /* Let width adjust on mobile */
+  }
+}

@@ -215,28 +215,30 @@ export default function Hero() {
             height={20} 
             className="absolute right-[25%] top-[calc(2.5vh+20%)] sm:right-73 sm:top-[10%] w-[13%] animate-float" 
           />
-<div className="hidden sm:flex absolute left-1/2 top-[55%] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center gap-6 mt-4">
-  <span className="animate-text-shimmer text-[5vw] sm:text-[3vw] md:text-[2.2vw] lg:text-[1.6vw] xl:text-[1.4vw] leading-tight font-bold tracking-wider drop-shadow-2xl text-center whitespace-nowrap overflow-hidden text-ellipsis mb-2">
-    Sponsored by:-
-  </span>
 
-  <div className="flex items-center justify-center gap-10">
-    <Image 
-      src="/Hero/DERBI.png" 
-      alt="Derbi" 
-      width={200} 
-      height={120} 
-      className="rounded-xl object-contain shadow-lg"
-    />
-    <Image 
-      src="/Hero/SagarHospital.png" 
-      alt="Sagar Hospital" 
-      width={200} 
-      height={120} 
-      className="rounded-xl object-contain shadow-lg"
-    />
-  </div>
-</div>
+
+          <div className="hidden sm:flex absolute left-1/2 top-[52%] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center gap-6 mt-4">
+            <span className="animate-text-shimmer text-[5vw] sm:text-[3vw] md:text-[2.2vw] lg:text-[1.6vw] xl:text-[1.4vw] leading-tight font-bold tracking-wider drop-shadow-2xl text-center whitespace-nowrap overflow-hidden text-ellipsis mb-2">
+              Sponsored by:-
+            </span>
+
+            <div className="flex items-center justify-center gap-10">
+              <Image 
+                src="/Hero/DERBI.png" 
+                alt="Derbi" 
+                width={150} 
+                height={90} 
+                className="rounded-xl object-contain shadow-lg"
+              />
+              <Image 
+                src="/Hero/SagarHospital.png" 
+                alt="Sagar Hospital" 
+                width={150} 
+                height={90} 
+                className="rounded-xl object-contain shadow-lg"
+              />
+            </div>
+          </div>
 
 
           <Image 
