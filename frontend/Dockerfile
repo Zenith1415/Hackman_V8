@@ -3,9 +3,9 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Allow building from repo root or from frontend/ by switching APP_DIR
-# - If building from repo root: APP_DIR=frontend (default below)
-# - If building with context set to ./frontend: APP_DIR=.
-ARG APP_DIR=frontend
+# - If building with context set to ./frontend: APP_DIR=. (default below)
+# - If building from repo root: pass --build-arg APP_DIR=frontend
+ARG APP_DIR=.
 ENV APP_DIR=${APP_DIR}
 
 # Copy package files and install dependencies reproducibly
