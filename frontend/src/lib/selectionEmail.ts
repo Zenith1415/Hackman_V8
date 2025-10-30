@@ -62,6 +62,11 @@ export function buildPaymentVerificationEmailHtml(teamName: string, teamCode: st
 
 export async function sendPaymentVerificationEmail({ teamName, teamCode, recipients, whatsappLink }: PaymentVerificationEmailPayload): Promise<void> {
   if (!recipients || recipients.length === 0) return;
+  if (!process.env.EMAIL_SERVER_USER || !process.env.EMAIL_SERVER_PASSWORD) {
+    console.error('Email not sent: EMAIL_SERVER_USER or EMAIL_SERVER_PASSWORD not set');
+    return;
+  }
+
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -69,18 +74,34 @@ export async function sendPaymentVerificationEmail({ teamName, teamCode, recipie
       pass: process.env.EMAIL_SERVER_PASSWORD,
     },
   });
+
+  try {
+    await transporter.verify();
+    console.info('Email transporter verified for payment verification emails');
+  } catch (verifyErr) {
+    console.error('Email transporter verification failed:', verifyErr);
+    // proceed to attempt sending anyway; the sendMail call will likely fail but will be caught below
+  }
+
   const subject = '🎉 Payment Verified - You\'re Coming to HackmanV8!';
   const html = buildPaymentVerificationEmailHtml(teamName, teamCode, whatsappLink);
-  await Promise.all(
-    recipients.map((to) =>
-      transporter.sendMail({
-        from: `Hackman V8 Team <${process.env.EMAIL_SERVER_USER}>`,
-        to,
-        subject,
-        html,
-      })
-    )
-  );
+
+  console.info(`Sending payment verification email to ${recipients.length} recipient(s) for team ${teamCode}`);
+  try {
+    await Promise.all(
+      recipients.map((to) =>
+        transporter.sendMail({
+          from: `Hackman V8 Team <${process.env.EMAIL_SERVER_USER}>`,
+          to,
+          subject,
+          html,
+        })
+      )
+    );
+  } catch (sendErr) {
+    console.error('Failed to send payment verification email(s):', sendErr);
+    throw sendErr;
+  }
 }
 
 export function buildSelectionEmailHtml(teamName: string, teamCode: string): string {
@@ -116,6 +137,11 @@ export function buildSelectionEmailHtml(teamName: string, teamCode: string): str
 
 export async function sendSelectionEmail({ teamName, teamCode, recipients }: SelectionEmailPayload): Promise<void> {
   if (!recipients || recipients.length === 0) return;
+  if (!process.env.EMAIL_SERVER_USER || !process.env.EMAIL_SERVER_PASSWORD) {
+    console.error('Email not sent: EMAIL_SERVER_USER or EMAIL_SERVER_PASSWORD not set');
+    return;
+  }
+
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -123,18 +149,33 @@ export async function sendSelectionEmail({ teamName, teamCode, recipients }: Sel
       pass: process.env.EMAIL_SERVER_PASSWORD,
     },
   });
+
+  try {
+    await transporter.verify();
+    console.info('Email transporter verified for selection emails');
+  } catch (verifyErr) {
+    console.error('Email transporter verification failed:', verifyErr);
+  }
+
   const subject = '🎉 Congratulations! You\'re in!';
   const html = buildSelectionEmailHtml(teamName, teamCode);
-  await Promise.all(
-    recipients.map((to) =>
-      transporter.sendMail({
-        from: `Hackman V8 Team <${process.env.EMAIL_SERVER_USER}>`,
-        to,
-        subject,
-        html,
-      })
-    )
-  );
+
+  console.info(`Sending selection email to ${recipients.length} recipient(s) for team ${teamCode}`);
+  try {
+    await Promise.all(
+      recipients.map((to) =>
+        transporter.sendMail({
+          from: `Hackman V8 Team <${process.env.EMAIL_SERVER_USER}>`,
+          to,
+          subject,
+          html,
+        })
+      )
+    );
+  } catch (sendErr) {
+    console.error('Failed to send selection email(s):', sendErr);
+    throw sendErr;
+  }
 }
 
 

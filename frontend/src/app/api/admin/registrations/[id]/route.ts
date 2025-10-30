@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/dbConnect';
 import Registration from '@/models/Registration';
+import { sendRejectionEmail } from '@/lib/rejectionEmail';
 // Admin endpoints rely on strong token auth; no rate limiting applied
 import { isValidObjectId } from '@/lib/security';
 
@@ -72,10 +73,43 @@ export async function PUT(
     }
 
     await dbConnect();
-    // Remove unused variable
+
+    // Fetch existing to detect transitions on selectionStatus
+    const existing = await Registration.findById(id).lean();
+    if (!existing) {
+      return NextResponse.json({ message: 'Not found' }, { status: 404 });
+    }
+
     const doc = await Registration.findByIdAndUpdate(id, update, { new: true, runValidators: true }).lean();
     if (!doc) {
       return NextResponse.json({ message: 'Not found' }, { status: 404 });
+    }
+    // If selectionStatus transitioned to rejected via this generic endpoint, send email (to team lead only)
+    if (typeof body.selectionStatus === 'string' && body.selectionStatus === 'rejected' && existing.selectionStatus !== 'rejected') {
+      try {
+        type MemberLike = { email?: string };
+        const membersUnknown: unknown = (doc as unknown as { members?: unknown }).members;
+        const teamLeadIndex = typeof (doc as unknown as { teamLeadId?: unknown }).teamLeadId === 'number'
+          ? (doc as unknown as { teamLeadId: number }).teamLeadId
+          : 0;
+        let recipients: string[] = [];
+        if (Array.isArray(membersUnknown)) {
+          const members = membersUnknown as MemberLike[];
+          const leadEmail = members[teamLeadIndex]?.email;
+          if (typeof leadEmail === 'string' && leadEmail.length > 0) {
+            recipients = [leadEmail];
+          } else {
+            const first = members.find(m => typeof m.email === 'string' && m.email.length > 0)?.email;
+            if (first) recipients = [first];
+          }
+        }
+        console.info(`Attempting to send rejection email to team ${doc.teamCode} with recipients:`, recipients);
+        await sendRejectionEmail({ teamName: doc.teamName, teamCode: doc.teamCode, recipients });
+        console.info(`Rejection email sent successfully for team ${doc.teamCode}`);
+      } catch (emailErr) {
+        console.error('Failed to send rejection email(s):', emailErr);
+        // Do not fail the request if email sending fails
+      }
     }
   
     return NextResponse.json({ data: doc });

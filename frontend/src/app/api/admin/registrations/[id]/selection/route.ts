@@ -4,6 +4,7 @@ import Registration from '@/models/Registration';
 // Admin endpoints rely on strong token auth; no rate limiting applied
 import { isValidObjectId } from '@/lib/security';
 import { sendSelectionEmail } from '@/lib/selectionEmail';
+import { sendRejectionEmail } from '@/lib/rejectionEmail';
 
 function isAuthorized(request: NextRequest): boolean {
   const header = request.headers.get('authorization') || '';
@@ -65,6 +66,35 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
         await sendSelectionEmail({ teamName: updated.teamName, teamCode: updated.teamCode, recipients });
       } catch (emailErr) {
         console.error('Failed to send selection email(s):', emailErr);
+        // Do not fail the request if email sending fails
+      }
+    }
+
+    // If transitioning to rejected, send rejection email notification (to team lead only)
+    const transitionedToRejected = selectionStatus === 'rejected' && existing.selectionStatus !== 'rejected';
+    if (transitionedToRejected) {
+      try {
+        type MemberLike = { email?: string };
+        const membersUnknown: unknown = (updated as unknown as { members?: unknown }).members;
+        const teamLeadIndex = typeof (updated as unknown as { teamLeadId?: unknown }).teamLeadId === 'number'
+          ? (updated as unknown as { teamLeadId: number }).teamLeadId
+          : 0;
+        let recipients: string[] = [];
+        if (Array.isArray(membersUnknown)) {
+          const members = membersUnknown as MemberLike[];
+          const leadEmail = members[teamLeadIndex]?.email;
+          if (typeof leadEmail === 'string' && leadEmail.length > 0) {
+            recipients = [leadEmail];
+          } else {
+            const first = members.find(m => typeof m.email === 'string' && m.email.length > 0)?.email;
+            if (first) recipients = [first];
+          }
+        }
+        console.info(`Attempting to send rejection email to team ${updated.teamCode} with recipients:`, recipients);
+        await sendRejectionEmail({ teamName: updated.teamName, teamCode: updated.teamCode, recipients });
+        console.info(`Rejection email sent successfully for team ${updated.teamCode}`);
+      } catch (emailErr) {
+        console.error('Failed to send rejection email(s):', emailErr);
         // Do not fail the request if email sending fails
       }
     }

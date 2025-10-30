@@ -402,6 +402,42 @@ export default function AdminPage() {
       }
     }
   }
+  async function handleReject(reg: Registration) {
+    if (!token) {
+      setError('Admin token required to reject.');
+      return;
+    }
+    const confirmed = window.confirm(`Reject team "${reg.teamName}" (${reg.teamCode}) and send email notification?`);
+    if (!confirmed) return;
+    try {
+      const res = await fetch(`/api/admin/registrations/${reg._id}/selection`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ selectionStatus: 'rejected' }),
+      });
+      if (res.status === 401) {
+        throw new Error('Unauthorized');
+      }
+      if (!res.ok) {
+        const t = await res.text();
+        throw new Error(t || 'Failed to reject');
+      }
+      const json = await res.json();
+      const updated: Registration = json.data;
+      setData(prev => (prev || []).map(r => r._id === updated._id ? updated : r));
+    } catch (e) {
+      if ((e as Error).message === 'Unauthorized') {
+        setError('Admin token invalid. Please login again.');
+        localStorage.removeItem('admin_token');
+        setToken("");
+      } else {
+        setError((e as Error).message || 'Failed to reject');
+      }
+    }
+  }
   if (!token) {
     return (
       <div style={{ maxWidth: 420, margin: '64px auto', padding: 24 }}>
@@ -1061,6 +1097,24 @@ export default function AdminPage() {
                         disabled={!token}
                       >
                         Edit
+                      </button>
+                      <button
+                        onClick={() => handleReject(r)}
+                        style={{ 
+                          padding: '8px 16px', 
+                          borderRadius: 8, 
+                          background: 'linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)', 
+                          color: '#fff', 
+                          border: 'none',
+                          fontWeight: 'bold',
+                          cursor: !token ? 'not-allowed' : 'pointer',
+                          opacity: !token ? 0.5 : 1,
+                          boxShadow: '0 4px 15px rgba(153, 27, 27, 0.4)',
+                          transition: 'all 0.3s ease'
+                        }}
+                        disabled={!token}
+                      >
+                        Reject
                       </button>
                       <button
                         onClick={() => handleDelete(r._id)}
