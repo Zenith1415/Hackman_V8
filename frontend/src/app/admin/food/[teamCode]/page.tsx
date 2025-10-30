@@ -45,12 +45,20 @@ export default function FoodDistributionPage() {
   const teamCode = params.teamCode as string;
 
   // --- State Hooks ---
+  const [token, setToken] = useState<string>("");
+  const [inputToken, setInputToken] = useState<string>("");
   const [membersData, setMembersData] = useState<MemberList>([]);
   const [teamName, setTeamName] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // --- Data Fetching Effect ---
+  useEffect(() => {
+    // load token from localStorage
+    const stored = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
+    if (stored) setToken(stored);
+  }, []);
+
   useEffect(() => {
     if (!teamCode || teamCode === "undefined") {
       setLoading(false);
@@ -62,7 +70,9 @@ export default function FoodDistributionPage() {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`/api/admin/food/${teamCode}`);
+        const response = await fetch(`/api/admin/food/${teamCode}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
         if (!response.ok) {
           const err = await response.json();
           throw new Error(err.message || 'Team not found');
@@ -85,8 +95,10 @@ export default function FoodDistributionPage() {
       }
     };
 
-    fetchTeam();
-  }, [teamCode]);
+    if (token) {
+      fetchTeam();
+    }
+  }, [teamCode, token]);
 
   // --- Update Handler ---
   const handleFoodToggle = async (
@@ -107,7 +119,7 @@ export default function FoodDistributionPage() {
     try {
       const response = await fetch('/api/admin/food/update', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({
           docId: docId,
           field: field,
@@ -135,6 +147,60 @@ export default function FoodDistributionPage() {
   // --- Render logic ---
   if (loading) { /* ... */ }
   if (error) { /* ... */ }
+
+  if (!token) {
+    return (
+      <div style={{ maxWidth: 420, margin: '64px auto', padding: 24 }}>
+        <Toaster />
+        <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 12 }}>Admin Login</h2>
+        <p style={{ color: '#666', marginBottom: 16 }}>Enter the admin access token.</p>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            const trimmed = inputToken.trim();
+            if (!trimmed) return;
+            localStorage.setItem('admin_token', trimmed);
+            setToken(trimmed);
+          }}
+          style={{ display: 'flex', gap: 8 }}
+        >
+          <input
+            type="password"
+            placeholder="Admin token"
+            value={inputToken}
+            onChange={(e) => setInputToken(e.target.value)}
+            style={{ flex: 1, padding: '10px 12px', border: '1px solid #ddd', borderRadius: 8 }}
+          />
+          <button
+            type="submit"
+            style={{
+              padding: '12px 32px',
+              borderRadius: 12,
+              background: 'linear-gradient(135deg, #FF0500 0%, #c53030 100%)',
+              color: 'white',
+              border: 'none',
+              fontWeight: 'bold',
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 4px 15px rgba(255, 5, 0, 0.4)'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 5, 0, 0.6)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 5, 0, 0.4)';
+            }}
+          >
+            Continue
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.pageContainer}>
