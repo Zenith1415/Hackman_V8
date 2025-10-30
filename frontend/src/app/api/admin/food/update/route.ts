@@ -1,10 +1,20 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/dbConnect';
 import FoodLog from '@/models/FoodLog';
-import mongoose from 'mongoose';
+// No ObjectId casting; FoodLog uses string _id
+
+function isAuthorized(request: Request): boolean {
+  const header = request.headers.get('authorization') || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : '';
+  const expected = process.env.ADMIN_TOKEN || '';
+  return Boolean(expected) && token === expected;
+}
 
 export async function POST(request: Request) {
   try {
+    if (!isAuthorized(request)) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
     const { docId, field, status } = await request.json();
 
     if (!docId || !field || typeof status !== 'boolean') {
@@ -16,19 +26,10 @@ export async function POST(request: Request) {
 
     await dbConnect();
 
-    let result;
-    try {
-      result = await FoodLog.updateOne(
-        { _id: new mongoose.Types.ObjectId(docId) },
-        { [field]: status }
-      );
-    } catch (castError) {
-      console.warn('Casting to ObjectId failed, trying string match...');
-      result = await FoodLog.updateOne(
-        { _id: docId },
-        { [field]: status }
-      );
-    }
+    const result = await FoodLog.updateOne(
+      { _id: docId },
+      { [field]: status }
+    );
 
     if (result.matchedCount === 0) {
       return NextResponse.json({ message: 'Document not found' }, { status: 404 });

@@ -1,11 +1,18 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/dbConnect';
 import FoodLog from '@/models/FoodLog';
-import mongoose from 'mongoose'; // <-- 1. Import mongoose
+// mongoose not needed here since FoodLog uses string _id
+
+function isAuthorized(request: Request): boolean {
+  const header = request.headers.get('authorization') || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : '';
+  const expected = process.env.ADMIN_TOKEN || '';
+  return Boolean(expected) && token === expected;
+}
 
 // 2. Define an interface for the data returned by .lean()
 interface IFoodLog {
-  _id: mongoose.Types.ObjectId;
+  _id: string;
   name: string;
   teamName: string;
   teamId: string;
@@ -21,6 +28,9 @@ export async function GET(
   context: { params: Promise<{ teamCode: string }> }
 ) {
   try {
+    if (!isAuthorized(request)) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
     const params = await context.params;
     const { teamCode } = params;
 
@@ -43,13 +53,8 @@ export async function GET(
       );
     }
 
-    // 3. Apply the type to the 'member' variable
-    const membersData = members.map((member: IFoodLog) => ({
-      ...member,
-      _id: member._id.toString(), // <-- This line will no longer error
-    }));
-
-    return NextResponse.json(membersData, { status: 200 });
+    // Data already has string _id; return as-is
+    return NextResponse.json(members, { status: 200 });
   } catch (error: unknown) { // <-- Also fixed the 'any' type error here
     let message = 'Internal server error';
     if (error instanceof Error) {
